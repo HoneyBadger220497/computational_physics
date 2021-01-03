@@ -43,7 +43,7 @@ ip.addRequired('yy', @(x) isEvenSize(x));
 ip.addRequired('time');
 ip.addParameter('bc', 't', @(x) ischar(x) && any(strcmp(x, {'0','t'})));
 ip.addParameter('M_plus', []);
-ip.addParameter('M_minus'), []);
+ip.addParameter('M_minus', []);
 ip.parse(varargin{:})
 
 xx = ip.Results.xx;
@@ -54,7 +54,7 @@ M_minus = ip.Results.M_minus;
 bc = ip.Results.bc;
 
 %check input values
-if ~all(size(xx) == sizey(yy))
+if ~all(size(xx) == size(yy))
     error('xx and yy must have the same size')
 end
 if ~all(size(M_plus) == size(xx))
@@ -63,13 +63,13 @@ end
 if ~all(size(M_minus) == size(xx))
     error('M_minus and xx must have the same size')
 end
-if any(abs(real(M_plus)) > eps) || any(abs(real(M_minues)) > eps)
+if any(abs(real(M_plus(:))) > eps) || any(abs(real(M_minus(:))) > eps)
    warning('The mass terms are thought to be purly imaginary') 
 end
 
 %%% init required parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-dx = xx(1,2) - xx(1,1);
-dy = yy(2,1) - yy(1,1);
+dx = 2*(xx(1,2) - xx(1,1));
+dy = 2*(yy(2,1) - yy(1,1));
 dt = time(2)- time(1);
 
 rx = dt/dx;
@@ -79,13 +79,13 @@ ry = dt/dy;
 % init um_n chess matrix at time: t_n - 0.5*dt
 % relevant spinor entries (u) stored in x_field
 % relevant mass terms (M_minus) stored in o_field
-um_n = ChessMat(ip.Results.um0, 'bc', bc);
+um_n = ChessMat(ip.Results.um0, bc);
 um_n.oWrite(M_minus);
 
 % init vp_n chess matrix at time: t_n 
 % relevant spinor entries (v) stored in o_field
 % relevant mass terms (M_plus) stored in x_field
-vp_n = ChessMat(ip.Results.vp0, 'bc', bc);
+vp_n = ChessMat(ip.Results.vp0, bc);
 vp_n.xWrite(M_plus); 
 
 %%% init solution structures %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -96,7 +96,7 @@ sol_v = Fds2DSolution(xx, yy);
 sol_v.changeUnits('l_p', 't_p/c');
 
 %%% solve equation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-um_np1 = ChessMat(zeros(size(xx)), 'bc', bc);
+um_np1 = ChessMat(zeros(size(xx)), bc);
 um_np1.oWrite(M_minus);
 
 time(end+1) = time(end) + dt; % elongate time because interpolation of u
@@ -106,7 +106,7 @@ for idx_t = 1:length(time)
     %%% store solution of v
     t = time(idx_t); % idx_t == 1 --> t == 0;
     [~, sol_vp_n] = vp_n.xInterp();
-    sol_v.appendSolution(this, t, sol_vp_n);
+    sol_v.appendSolution(t, sol_vp_n);
     
     %%% um_n + vp_n -> um_np1
     % u is stored as x_flieds -> get x neighbours
@@ -134,11 +134,12 @@ for idx_t = 1:length(time)
     t = time(idx_t); % idx_t == 1 --> t == 0;
     [~, sol_um_n]   = um_n.oInterp();
     [~, sol_um_np1] = um_np1.oInterp();
-    sol_u.appendSolution(this, t, 0.5*(sol_um_n+ sol_um_np1)); % time interpolation
+    sol_u.appendSolution(t, 0.5*(sol_um_n + sol_um_np1)); % time interpolation
     
     %%% update um_n
     um_n.setXField(um_np1.getXField()); % the mass terms do not change over time
     
+    disp(['t = ', num2str(t)])
 end
 
 end

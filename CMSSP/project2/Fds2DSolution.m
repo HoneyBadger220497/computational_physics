@@ -16,11 +16,11 @@ classdef Fds2DSolution < handle
     
     methods (Access = public)
         
-        function this = FdsSolution(varargin)
+        function this = Fds2DSolution(varargin)
             
             ip = inputParser();
             ip.addRequired('xx', @(x) isnumeric(x));
-            ip.addRequired('yy', [], @(x) isnumeric(x));
+            ip.addRequired('yy', @(x) isnumeric(x));
             ip.addOptional('unitSpace', 'm', @(x) ischar(x));
             ip.addOptional('unitTime', 's', @(x) ischar(x));
             ip.parse(varargin{:})
@@ -48,9 +48,9 @@ classdef Fds2DSolution < handle
             %  
             
             if ~isempty(this.solution)
-                if t > this.t(end)
-                    this.t(end+1) = t;
-                    this.solution{end+1} = sol;
+                if t > this.time(end)
+                    this.time(end+1) = t;
+                    this.solution(:,:,end+1) = sol;
                 else
                     error(['t is smaller than latest timestamp! ' ...
                            'If this is intended use "insertSolution" ' ...
@@ -58,7 +58,7 @@ classdef Fds2DSolution < handle
                 end
                 
             else
-                this.t = t;
+                this.time = t;
                 this.solution = sol;
                 
             end
@@ -76,15 +76,15 @@ classdef Fds2DSolution < handle
             %  
             
             if ~isempty(this.solution)
-                if any(t == this.t)
+                if any(t == this.time)
                     error(['There is already a solution to this time t!' ...
                           'If this is intended use "replaceSolution" ' ...
                           'instead.'])
                 else
-                    idx = find(t < this.t, 'last');
+                    idx = find(t < this.time, 'last');
                     
-                    this.t(idx+1:(end+1)) = this.t(idx:end);
-                    this.t(idx) = t;
+                    this.time(idx+1:(end+1)) = this.time(idx:end);
+                    this.time(idx) = t;
                     
                     this.solution(:,:,idx+1:(end+1)) = this.solution(:,:,idx:end);
                     this.solution(:,:,idx) = sol;
@@ -92,7 +92,7 @@ classdef Fds2DSolution < handle
                 end
                 
             else
-                this.t = t;
+                this.time = t;
                 this.solution = sol;
             end
             
@@ -110,7 +110,7 @@ classdef Fds2DSolution < handle
             %  
             
             if ~isempty(this.solution)
-                idx = find(t == this.t);
+                idx = find(t == this.time);
                 
                 if lenth(idx) == 1
                     this.solution(:,:,idx) = sol;
@@ -121,7 +121,7 @@ classdef Fds2DSolution < handle
                 end
                 
             else
-                this.t = t;
+                this.time = t;
                 this.solution = sol;
                 
             end
