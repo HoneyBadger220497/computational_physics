@@ -1,4 +1,4 @@
-function [sol_u, sol_v] = solve2p1dDiracEq(varargin)
+function [sol_u, sol_v] = solveEquation(varargin)
 % DESCRIPTION: 
 % this function solves the (2+1)d dirac equation with a explicit staggerd 
 % grid leapfrog finite difference sceme.
@@ -8,9 +8,25 @@ function [sol_u, sol_v] = solve2p1dDiracEq(varargin)
 % In the places in between the u and v values, which are not used by the
 % sceme, the mass/potential terms are stored.
 %
-% DATA STORAGE:
-% When reducing it to a 1-d layering structer the storage matrices vm and
-% um look the following
+% INPUT:
+% required:
+%  um0         [nx x ny complex]  
+%  vp0         [nx x ny complex]
+%  xx          [nx x ny double]
+%  yy          [nx x ny double]
+%  time        [ 1 x nt double]
+% parameter:
+%  bc          [string]
+%  M_plus     [function_handle] potential+mass term 
+%  M_minus    [function_handle] potential-mass term 
+%
+% OUTPUT:
+%  sol_u       [diracEq2D.FdsSolution] solution for u-component of spinor
+%  sol_V       [diracEq2D.FdsSolution] solution for v-component of spinor
+%
+% NOTE: DATA STORAGE ------------------------------------------------------
+% When reducing it to a 1-d layering structer the storage matrices um and
+% vm look the following
 %
 % t_3 + 0.5 dt : - u - M - u - M - u - M - u - M -  <- req. for time interp
 % t_3          : - M - v - M - v - M - v - M - v -  <- last timestep 
@@ -22,17 +38,20 @@ function [sol_u, sol_v] = solve2p1dDiracEq(varargin)
 %  0           : - M - v - M - v - M - v - M - v -  <- vp0 inital cond.
 %  0  - 0.5 dt : - u - M - u - M - u - M - u - M -  <- um0 inital cond.
 %
+% NOTE:  NATURAL UNITS USED! ----------------------------------------------
+% units where the follwoing holds are used: 
+%   h_bar = 1   (planck constant)
+%   c     = 1   (speed of light)
+% 
+% There relevant units are concretely tabularized here:
+% quantitiy     |  unit |     actual unit     |     SI unit
+%   energy         1eV           1eV              1.60218e-19 J
+%   time          1/1eV       h_bar / 1eV         6.58212e-16 s
+%   distace       1/1eV     c * h_bar / 1eV       1.97327e-7  m
+%   mass           1eV        1eV / c^2           1.78266e-36 kg
+%   velocity        1             c               2.99792e+9  m/s
+%   wavenumber     1eV      1ev / c * h_bar       
 %
-% INPUT:
-% um0         [nx x ny complex]  
-% vp0         [nx x ny complex]
-% xx          [nx x ny double]
-% yy          [nx x ny double]
-% time        [ 1 x nt double]
-% bc          [string]
-% M_plus     [function_handle] potential+mass term 
-% M_minus    [function_handle] potential-mass term 
-
 
 %%% input parse %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ip = inputParser();
@@ -79,24 +98,24 @@ ry = dt/dy;
 % init um_n chess matrix at time: t_n - 0.5*dt
 % relevant spinor entries (u) stored in x_field
 % relevant mass terms (M_minus) stored in o_field
-um_n = ChessMat(ip.Results.um0, bc);
+um_n = diracEq2D.ChessMat(ip.Results.um0, bc);
 um_n.oWrite(M_minus);
 
 % init vp_n chess matrix at time: t_n 
 % relevant spinor entries (v) stored in o_field
 % relevant mass terms (M_plus) stored in x_field
-vp_n = ChessMat(ip.Results.vp0, bc);
+vp_n = diracEq2D.ChessMat(ip.Results.vp0, bc);
 vp_n.xWrite(M_plus); 
 
 %%% init solution structures %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-sol_u = Fds2DSolution(xx, yy);
+sol_u = diracEq2D.Fds2DSolution(xx, yy);
 sol_u.changeUnits('l_p', 't_p/c');
 
-sol_v = Fds2DSolution(xx, yy);
+sol_v = diracEq2D.Fds2DSolution(xx, yy);
 sol_v.changeUnits('l_p', 't_p/c');
 
 %%% solve equation %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-um_np1 = ChessMat(zeros(size(xx)), bc);
+um_np1 = diracEq2D.ChessMat(zeros(size(xx)), bc);
 um_np1.oWrite(M_minus);
 
 time(end+1) = time(end) + dt; % elongate time because interpolation of u
@@ -144,7 +163,9 @@ end
 
 end
 
-% subroutines
+%% ------------------------------------------------------------------------
+% subroutines 
+
 function val = isEvenSize(M)
 s = size(M);
 if mod(s(1),2) == 0 && mod(s(2),2) == 0 
