@@ -275,5 +275,8 @@ TSWLatexianTemp*
 # Makeindex log files
 *.lpz
 
-# Matlab
+# Matlab temporary files
 *.asv
+
+# videos
+*.mp4
