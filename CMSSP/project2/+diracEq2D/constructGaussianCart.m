@@ -1,18 +1,17 @@
-function gwp = constructGaussianPol(varargin)
+function [gwp] = constructGaussianCart(varargin)
 % This function constructs a gaussian wave packet out of a superpostion of
 % plane wave solutions of the (2+1)d dirac equation. 
 %
-% The used plane wave solutions all have k-vectors within a shiftet sphere
-% in discrete k-space.
+% The used plane wave solutions all have k-vectors within a shiftet square
+% box in discrete k_space
 %
 % INPUTS:
 % required:
 %   kx          [ 1 x 1 double ] mean x-component of wavepacket
-%   ky          [ 1 x 1 double ] mean x-component of wavepacket
+%   ky          [ 1 x 1 double ] mean y-component of wavepacket
 %   b           [ 1 x 1 double ] halfwidht of gausspeak in real space
-%   rk          [ 1 x 1 double ] radius of sphere in k-space
-%   dkx         [ 1 x 1 double ] x-discretisation of grid in k-space
-%   dky         [ 1 x 1 double ] y-discretisation of grid in k-space
+%   nk         [ 1 x 1 double ] number of wavenumbers in each direction
+%   mk         [ 1 x 1 double ] specifies maximum half side-lenght of box
 % parameter:
 %   t0          [ 1 x 1 double ] time origin for gaussian peak.
 %   x0          [ 1 x 1 double ] x-coordinate of center of gaussian peak 
@@ -46,9 +45,8 @@ ip = inputParser();
 ip.addRequired('kx');
 ip.addRequired('ky');
 ip.addRequired('b');
-ip.addRequired('rk');
-ip.addRequired('dkx');
-ip.addRequired('dky');
+ip.addParameter('nk', 10);
+ip.addParameter('mk', 1);
 ip.addParameter('t0', 0);
 ip.addParameter('x0', 0);
 ip.addParameter('y0', 0);
@@ -59,33 +57,36 @@ ip.addParameter('solution', 1)
 ip.addParameter('volumen', 1)
 ip.parse(varargin{:})
 
+% required
 k0 = [ip.Results.kx;ip.Results.ky];
-rk  = ip.Results.rk;
-dkx = ip.Results.dkx;
-dky = ip.Results.dky;
-b = ip.Results.b;
+b  = ip.Results.b;
+
+% parameters
+nk = ip.Results.nk;
+mk = ip.Results.mk;
 
 % construct wave numbers and amplitudes
-% find number max of points in sphere in each direction
-nkx = ceil(rk/dkx);
-nky = ceil(rk/dky);
+k = zeros(2,nk^2);
+a = zeros(1,nk^2);
 
-% calculate all k-Values within sphere in k-space
-[kxx,kyy] = meshgrid(linspace(-rk,rk,nkx),linspace(-rk,rk,nky));
-idx_insphere = kxx.^2+kyy.^2 <= rk.^2;
-kkxx = kxx(idx_insphere);
-kkyy = kyy(idx_insphere);
-k = [kkxx(:).';kkyy(:).'];
+ki = linspace(-mk,mk,nk);
 
-% gaussian weights for plane waves
-a = exp(-(b).^2*sum(k.^2,1));
+idx = 1; % index of current plane wave solution
+for i_kx = 1:nk
+    for i_ky = 1:nk
+        % wavenumber
+        k(:,idx) = [ki(i_kx) + k0(1); ki(i_ky) + k0(2)];
+        % amplitudes
+        a(idx) = exp(-(b).^2*norm(k(:,idx) - k0).^2);
+        %raise index
+        idx = idx + 1;
+    end
+end
 N = sqrt(sum(abs(a(:)).^2));
 a = a/N; % normalize amplitudes
 
-k = k + k0;  % shift k-vectors 
-
-% create wavepacket
-gwp = DiracWavepacket(...
+% cosntruct wavepacket.
+gwp = diracEq2D.DiracWavepacket(...
     k, ...
     a, ...
     't0', ip.Results.t0,...
