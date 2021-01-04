@@ -1,5 +1,7 @@
 % Test script for the function: planeWaveSolution
 
+addpath([pwd, '\..'])
+
 %% create szenario
 
 % setup parametes
@@ -19,8 +21,8 @@ y = linspace(y0, y0 + 2, 1000);
 [xx, yy] = meshgrid(x,y);
 
 % calculate plane wave solutions
-[A1,E1] = planeWaveSolution(kx,ky,v, m,c,1,(x1-x0)*(y1-y0));
-[A2,E2] = planeWaveSolution(kx,ky,v,m,c,-1,(x1-x0)*(y1-y0));
+[A1,E1] = diracEq2D.planeWaveSolution(kx,ky,v, m,c,1,(x1-x0)*(y1-y0));
+[A2,E2] = diracEq2D.planeWaveSolution(kx,ky,v,m,c,-1,(x1-x0)*(y1-y0));
 
 %% test 1 eigenspinor of positive solution %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 prec = 10^-13;
@@ -52,7 +54,9 @@ u = A1(1).*exp(1i*kx*xx+1i*ky*yy);
 v = A1(2).*exp(1i*kx*xx+1i*ky*yy);
 w = abs(u).^2 + abs(v).^2;
 
-p = trapz2D(x,y,w);
+p = trapz(y,  trapz(x , w, 2)); % numerical integrate over domain
+
+prec = 1e-3;
 if abs(p-1  )<prec
         disp('Test 4: passed')
 else

@@ -1,7 +1,9 @@
 % Test script for the Class: ChessMat
 
+addpath([pwd, '\..'])
+
 %% create szeanrio %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-CM = ChessMat(zeros(4,6));
+CM = diracEq2D.ChessMat(zeros(4,6));
 CM.setXField(ones(4,3))
 CM.setOField(2*ones(4,3))
 
