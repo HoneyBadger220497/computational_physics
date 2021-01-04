@@ -77,7 +77,7 @@ for i_kx = 1:nk
         % wavenumber
         k(:,idx) = [ki(i_kx) + k0(1); ki(i_ky) + k0(2)];
         % amplitudes
-        a(idx) = exp(-(b).^2*norm(k(:,idx) - k0).^2);
+        a(idx) = exp(-b.^2*norm(k(:,idx) - k0).^2);
         %raise index
         idx = idx + 1;
     end

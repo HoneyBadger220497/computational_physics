@@ -67,8 +67,8 @@ b = ip.Results.b;
 
 % construct wave numbers and amplitudes
 % find number max of points in sphere in each direction
-nkx = ceil(rk/dkx);
-nky = ceil(rk/dky);
+nkx = ceil(rk/dkx)+1;
+nky = ceil(rk/dky)+1;
 
 % calculate all k-Values within sphere in k-space
 [kxx,kyy] = meshgrid(linspace(-rk,rk,nkx),linspace(-rk,rk,nky));
@@ -78,9 +78,9 @@ kkyy = kyy(idx_insphere);
 k = [kkxx(:).';kkyy(:).'];
 
 % gaussian weights for plane waves
-a = exp(-(b).^2*sum(k.^2,1));
+a = exp(-b.^2*sum(k.^2,1));
 N = sqrt(sum(abs(a(:)).^2));
-a = a/N; % normalize amplitudes
+a = a./N; % normalize amplitudes
 
 k = k + k0;  % shift k-vectors 
 
