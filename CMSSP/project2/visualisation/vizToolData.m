@@ -133,20 +133,20 @@ classdef vizToolData < handle
             if isempty(fnc)
                 if this.dimd == 1
                     if this.nd == 1
-                        this.update_fnc = @(ax, x, y) updateFunction1D(ax, x, y);
+                        this.update_fnc = @(ax, x, y) updateFunction1D(ax, 1, x, y);
                     elseif this.nd == 2
-                        this.update_fnc = @(ax, x, y1, y2) updateFunction1D(ax, x, y1, y2);
+                        this.update_fnc = @(ax, x, y1, y2) updateFunction1D(ax, 2, x, y1, y2);
                     elseif this.nd == 3
-                         this.update_fnc = @(ax, x, y1, y2, y3) updateFunction1D(ax, x, y1, y2, y3);
+                         this.update_fnc = @(ax, x, y1, y2, y3) updateFunction1D(ax, 3, x, y1, y2, y3);
                     end  
                     
                 else
                     if this.nd == 1
-                        this.update_fnc = @(ax, x, y, z) updateFunction2D(ax, x, y, z);
+                        this.update_fnc = @(ax, x, y, z) updateFunction2D(ax, 1, x, y, z);
                     elseif this.nd == 2
-                        this.update_fnc = @(ax, x, y, z1, z2) updateFunction2D(ax, x, y, z1, z2);
+                        this.update_fnc = @(ax, x, y, z1, z2) updateFunction2D(ax, 2, x, y, z1, z2);
                     elseif this.nd == 3
-                        this.update_fnc = @(ax, x, y, z1, z2, z3) updateFunction2D(ax, x, y, z1, z2, z3);
+                        this.update_fnc = @(ax, x, y, z1, z2, z3) updateFunction2D(ax, 3, x, y, z1, z2, z3);
                     end  
                     
                 end
@@ -297,19 +297,17 @@ classdef vizToolData < handle
 end
 
 %%% subroutines %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function updateFunction1D(ax, varargin)
+function updateFunction1D(ax, n_obj, varargin)
 
     graphic_obj = ax.Children();
-    n_obj = length(graphic_obj);
     for idx_obj = 1:n_obj
         set(graphic_obj(idx_obj), 'YData', varargin{idx_obj+1});
     end
 end
 
-function updateFunction2D(ax, varargin)
+function updateFunction2D(ax, n_obj, varargin)
 
     graphic_obj = ax.Children();
-    n_obj = length(graphic_obj);
     for idx_obj = 1:n_obj
         set(graphic_obj(idx_obj), 'ZData', varargin{idx_obj+2});
     end
