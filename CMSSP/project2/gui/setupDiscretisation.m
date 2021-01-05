@@ -57,9 +57,15 @@ function setupDiscretisation_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 
 %setup parameter
-handles.params.T = 1;
-handles.params.Lx = 2;
-handles.params.Ly = 2;
+ip = inputParser();
+ip.addOptional('T',1)
+ip.addOptional('Lx',2)
+ip.addOptional('Ly',2)
+ip.parse(varargin{:})
+
+handles.params.T = ip.Results.T;
+handles.params.Lx = ip.Results.Lx;
+handles.params.Ly = ip.Results.Ly;
 
 set(handles.edit_T, 'String' ,num2str(handles.params.T));
 set(handles.edit_Lx, 'String' ,num2str(handles.params.Lx));
