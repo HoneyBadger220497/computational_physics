@@ -170,3 +170,45 @@ shading interp
 view(0,90)
 axis square
 
+%% dirtyGaussian
+disp('testint: DiracGaussianDirty')
+
+% construct wave packet
+normalize = true;
+
+[u, v] = diracEq2D. constructGaussianDirty(...
+    xx, ... %xx
+    yy, ... %yy
+    k0x, ...%kx0
+    k0y, ...%ky0
+    0.2 , ... %bx
+    0.2 , ... %by
+    'x0',  -0.5, ...
+    'y0',  -0.5, ...
+    'potential', pot, ...
+    'mass', m, ...
+    'c', c, ...
+    'solution', 1, ...
+    'normalize', normalize);
+w = abs(u).^2 + abs(v).^2;
+
+
+%%% test if normalisation is correct %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+p = trapz(y,  trapz(x , w, 2)); % numerical integrate over domain
+
+prec = 1e-3;
+if abs(p-1)<prec
+    disp('Test 1: passed')
+elseif normalize
+    disp('Test 1: failed')
+    disp(abs(p))
+else 
+    disp('Test 1: passed')
+end
+    
+%%% visualize wave packet %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure(2)
+surf(xx,yy, w);
+shading interp
+view(0,90)
+axis square
