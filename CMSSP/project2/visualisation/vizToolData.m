@@ -56,7 +56,8 @@ classdef vizToolData < handle
             else
                 error('Not enough labels')
             end          
-
+            this.title = ip.Results.Title;
+            this.slider_label = ip.Results.SliderLabel;
             
         end %constructor
         
@@ -95,6 +96,21 @@ classdef vizToolData < handle
            this.title = title;
            
         end %setTilte
+        
+        function setLabels(this, varargin)
+            
+           if length(varargin) > this.nd+1
+               error('To many labels')
+           end
+           if ~isempty(varargin{1})
+               this.slider_label
+           end
+           for idx_d = 2:length(varargin)
+               if ~isempty(varargin{idx_d})
+                    this.label{idx_d} = varargin{idx_d};
+               end
+           end
+        end %setLabels
         
         function setPlotFnc(this, fnc)
             
@@ -138,6 +154,11 @@ classdef vizToolData < handle
         % plot functions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         function plotf(this, varargin)
+            
+            ip = inputParser();
+            ip.addOptional('ax', gca(), @(x) isa(x, 'matlab.graphics.axis.Axes'))
+            ip.addOptional('slider_idx', 1)
+            ip.parse(varargin{:})           
             
             this.plot(ip.Results.ax, ip.Results.slider_idx);
             this.plotTitle(ip.Results.ax)
@@ -213,16 +234,15 @@ classdef vizToolData < handle
         
         function plotTitle(this, ax)
             
-            title(ax, this.title)
+            title_obj = get(ax, 'Title');
+            set(title_obj, 'String', this.title)
         end
         
         function plotLabels(this, ax)
             
             xlabel(ax, this.plot_lables{1})
-            if this.nd == 2 
-                ylabel(ax, this.plot_lables{2})           
-            end
-            if this.nd == 3
+            ylabel(ax, this.plot_lables{2})           
+            if this.dimd >= 2
                 zlabel(ax, this.plot_lables{3})   
             end
         end

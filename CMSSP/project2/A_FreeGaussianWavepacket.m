@@ -26,6 +26,7 @@ clc;
 clear;
 close all;
 addpath([pwd '\gui'])
+addpath([pwd '\visualisation'])
 
 %% setup computational domain %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 params = setupDiscretisation();
@@ -43,11 +44,11 @@ y = y(1:end-1);
 
 %% medium, mass, potetial %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 c = 1;           % average speed of particel [velocity]                
-mass = 0;        % massterm      [energy]
-potential = 0;   % potetial      [energy] 
+mass = 2;        % massterm      [energy]
+pot = 0;   % potetial      [energy] 
 
-M_plus  = (potential + mass)/(1i*c)*ones(size(xx));  
-M_minus = (potential - mass)/(1i*c)*ones(size(xx)); 
+M_plus  = (pot + mass)/(1i*c)*ones(size(xx));  
+M_minus = (pot - mass)/(1i*c)*ones(size(xx)); 
 
 %% initial conditions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('constructing inital condition')
@@ -56,19 +57,20 @@ gwp = diracEq2D.constructGaussianPol(...
     3, ...  %kx0
     3, ...  %ky0
     0.05 , ... %b
-    10*pi, ...
+    30*pi, ...
     1*pi/(params.Lx), ...
     1*pi/(params.Ly), ...
     't0',  0, ...
     'x0',  -0.5, ...
     'y0',  -0.5, ...
-    'potential', potential, ...
+    'potential', pot, ...
     'mass', mass(1), ...
     'c', c, ...
     'solution', 1, ...
     'volumen', params.Lx*params.Ly);
 
 [u_init, v_init] = gwp.getComponent(xx, yy, 0);
+% ToDo: construct u_init at time t = -dt.
 
 figure(1)
 surf(xx,yy, abs(u_init).^2 + abs(v_init).^2)
@@ -93,36 +95,60 @@ disp('start numerical solution process')
 disp('pde solved! Evaluating Results')
 time = sol_u.time;
 
-sol_w = PdeSolution(xx, yy);
-sol_jx = PdeSolution(xx, yy);
-sol_jy = PdeSolution(xx, yy);
+vtd_w  = vizToolData(3, 2, ...
+    @(ax,x,y,z) surfplus(ax,x,y,z,[0,90]),...
+    {'x', 'y', 'w'}, ...
+    'SliderLabel', 'e-16 s', ...
+    'Title', 'Probability density');
+vtd_jx = vizToolData(3, 2, ...
+    @(ax,x,y,z) surfplus(ax,x,y,z,[0,90]),...
+    {'x', 'y', 'jx'},...
+    'Title', 'Current density j_x in x-direction');
+vtd_jy = vizToolData(3, 2, ...
+    @(ax,x,y,z) surfplus(ax,x,y,z,[0,90]),...
+    {'x', 'y', 'jy'},...
+    'Title', 'Current density j_y in y-direction');
 
 for idx_t = 1:length(time)
     
     t = time(idx_t);
+    disp([num2str(t/time(end)) '% '])
+    t = t*6.58212;
+
     u = sol_u.solution(:,:,idx_t);
     v = sol_v.solution(:,:,idx_t);
-    
+
     % probability density
     w = abs(u).^2 + abs(v).^2;
-    sol_w.addSolution(t,w);
+    vtd_w.addData(t, xx, yy, w);
     
     % current density in x direction
     jx = -2*c*imag(conj(u).*v);
-    sol_jx.addSolution(t, jx);
+    vtd_jx.addData(t, xx, yy, jx);
     
     % current density in y direction
     jy = 2*c*real(conj(u).*v);
-    sol_jy.addSolution(t, jy);
+    vtd_jy.addData(t, xx, yy, jy);
     
 end
 
-sol_w.visualize();
-%sol_jx.visualize();
-%sol_jy.visualize();
+vizTool(vtd_w, vtd_jx, vtd_jy)
 
-% ToDo: Better visualisation! 
+%% subroutines %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+function surfplus(ax,x,y,z,v)
+    
+    surf(ax,x,y,z);
+    shading(ax, 'interp')
+    view(ax, v(1),v(2))
+    if all(v == [0,90])
+            axis(ax, 'equal') % equal axis
+            xlim(ax, xlim(ax))
+            ylim(ax, ylim(ax))
+    end
+    zlim(ax, zlim(ax))
+    caxis(ax, zlim(ax))       % fix_colormap    
+end
 
 
 

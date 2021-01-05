@@ -22,7 +22,7 @@ function varargout = vizTool(varargin)
 
 % Edit the above text to modify the response to help vizTool
 
-% Last Modified by GUIDE v2.5 04-Jan-2021 20:51:14
+% Last Modified by GUIDE v2.5 04-Jan-2021 23:57:39
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -64,13 +64,13 @@ handles.data.n = calcSlideNumber(handles);
 
 % init plots
 if ~isempty(handles.data.ax1)
-    handles.data.ax1.plot(handles.axes1,1);
+    handles.data.ax1.plotf(handles.axes1,1);
 end
 if ~isempty(handles.data.ax2)
-    handles.data.ax2.plot(handles.axes2,1);
+    handles.data.ax2.plotf(handles.axes2,1);
 end
 if ~isempty(handles.data.ax3)
-    handles.data.ax3.plot(handles.axes3,1);
+    handles.data.ax3.plotf(handles.axes3,1);
 end
 
 % init slider
@@ -262,12 +262,3 @@ end
 if n_slides_1 ~= n_slides_3
     error('Number of slides of dataset 1 and 3 do not coincide')
 end
-
-
-
-
-
-
-
-
-
