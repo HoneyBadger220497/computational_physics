@@ -4,6 +4,7 @@ classdef vizToolData < handle
         
         plot_fnc = @(x,y )plot(x,y)
         update_fnc = @(x,y )plot(x,y)
+        domain_data = {};
         plot_data = {};              % [1 x nd cell{[nx x ny x nl]}] 
         plot_lables = {};            % [1 x nd cell{char}] array
         slider_data = [];            % [1 x nl] array
@@ -22,7 +23,7 @@ classdef vizToolData < handle
             
             ip = inputParser();
             ip.addRequired('nd')
-            ip.addRequired('dimd');
+            ip.addRequired('DomainData', @(x) iscell(x));
             ip.addRequired('PlotFnc', @(x )isa(x, 'function_handle'));
             ip.addRequired('PlotLabels', @(x) iscell(x) );
             ip.addParameter('SliderLabel', 'Slide');
@@ -31,16 +32,21 @@ classdef vizToolData < handle
             ip.parse(varargin{:})
             
             % data size 
-            if ip.Results.nd > 4 
-                error('plot function is not allowed to use more than 4 data inputs')
-            elseif ip.Results.nd < 2
-                error('plot function is not allowed to less than than 2 data inputs')
+            if ip.Results.nd > 3 
+                error('plot function is not allowed to use more than 3 data inputs')
+            elseif ip.Results.nd < 1
+                error('plot function is not allowed to less than than 1 data inputs')
             end
             this.nd = ip.Results.nd;
-            if ip.Results.dimd > 2
+            
+            % domain and dimension
+            domain = ip.Results.DomainData;     
+            dim_domain = length(domain);
+            if dim_domain > 2
                 error('data dimension can not be larger than 2')
             end
-            this.dimd = ip.Results.dimd;
+            this.dimd = dim_domain;
+            this.domain_data = domain;
             
             % plot function
             this.setPlotFnc(ip.Results.PlotFnc)
@@ -49,9 +55,9 @@ classdef vizToolData < handle
             this.setUpdateFnc(ip.Results.UpdateFnc)
             
             % plot labels
-            if length(ip.Results.PlotLabels) == this.nd
+            if length(ip.Results.PlotLabels) == this.nd + this.dimd
                 this.plot_lables = ip.Results.PlotLabels;
-            elseif length(ip.Results.PlotLabels) > this.nd
+            elseif length(ip.Results.PlotLabels) > this.nd + this.dimd
                 error('Too  many labels')
             else
                 error('Not enough labels')
@@ -126,19 +132,21 @@ classdef vizToolData < handle
             
             if isempty(fnc)
                 if this.dimd == 1
-                    if this.nd == 2
+                    if this.nd == 1
                         this.update_fnc = @(ax, x, y) updateFunction1D(ax, x, y);
-                    elseif this.nd == 3
+                    elseif this.nd == 2
                         this.update_fnc = @(ax, x, y1, y2) updateFunction1D(ax, x, y1, y2);
-                    elseif this.nd == 4
+                    elseif this.nd == 3
                          this.update_fnc = @(ax, x, y1, y2, y3) updateFunction1D(ax, x, y1, y2, y3);
                     end  
                     
                 else
-                    if this.nd == 3
+                    if this.nd == 1
                         this.update_fnc = @(ax, x, y, z) updateFunction2D(ax, x, y, z);
-                    elseif this.nd == 4
-                         this.update_fnc = @(ax, x, y, z1, z2) updateFunction2D(ax, x, y, z1, z2);
+                    elseif this.nd == 2
+                        this.update_fnc = @(ax, x, y, z1, z2) updateFunction2D(ax, x, y, z1, z2);
+                    elseif this.nd == 3
+                        this.update_fnc = @(ax, x, y, z1, z2, z3) updateFunction2D(ax, x, y, z1, z2, z3);
                     end  
                     
                 end
@@ -189,16 +197,9 @@ classdef vizToolData < handle
             end
             
             % plot data
-            if this.nd == 2
-                this.plot_fnc(this.ax, data{1}, data{2});
-            elseif this.nd == 3
-                this.plot_fnc(this.ax, data{1}, data{2}, data{3});
-            elseif this.nd == 4
-                this.plot_fnc(this.ax, data{1}, data{2}, data{3}, data{4});
-            end        
-            
-            
-        end
+            this.exeForDim(this.plot_fnc, this.ax, data)
+   
+        end %updatePlot
         
         function updatePlot(this, varargin)
             
@@ -222,13 +223,8 @@ classdef vizToolData < handle
                 data{idx_d} = this.plot_data{idx_d}(:,:,idx_s);
             end
             
-            if this.nd == 2
-                this.update_fnc(ax_, data{1}, data{2});
-            elseif this.nd == 3
-                this.update_fnc(ax_, data{1}, data{2}, data{3});
-            elseif this.nd == 4
-                this.update_fnc(ax_, data{1}, data{2}, data{3}, data{4});
-            end  
+            % update plot
+            this.exeForDim(this.update_fnc, ax_, data)
 
         end
         
@@ -251,22 +247,40 @@ classdef vizToolData < handle
     
     methods (Access = private)
         
+        function exeForDim(this, fnc, ax, data)
+            
+           n_data = length(data); 
+           if this.dimd == 1
+                if n_data == 1
+                    fnc(ax, this.domain_data{1}, data{1});
+                elseif n_data == 2
+                    fnc(ax, this.domain_data{1}, data{1}, data{2});
+                elseif n_data == 3
+                    fnc(ax, this.domain_data{1}, data{1}, data{2}, data{3});
+                end  
+            else
+                if n_data == 1
+                    fnc(ax, this.domain_data{1}, this.domain_data{2}, data{1});
+                elseif n_data == 2
+                    fnc(ax, this.domain_data{1}, this.domain_data{2}, data{1}, data{2});
+                elseif n_data == 3
+                    fnc(ax, this.domain_data{1}, this.domain_data{2}, data{1}, data{2}, data{3});
+                end  
+            end
+        end
+        
         function test = validifyFnc(this, fnc)
             
             fig = figure();
             ax_ = axes(fig);
             
-            dim = 4*ones(1, this.dimd);
-            test_data = zeros(dim);
+            test_data = {};
+            for idx_d = 1:this.nd
+                test_data{idx_d} = zeros(size(this.domain_data{1}));
+            end
             
             try
-                if this.nd == 2
-                    fnc(ax_, test_data, test_data);
-                elseif this.nd == 3
-                    fnc(ax_, test_data, test_data, test_data);
-                elseif this.nd == 4
-                    fnc(ax_, test_data, test_data, test_data, test_data);
-                end
+                this.exeForDim(fnc, ax_, test_data)
                 test = true;
             catch err
                 disp('The following went wrong while testing plot_fnc:')
@@ -301,3 +315,5 @@ function updateFunction2D(ax, varargin)
     end
 
 end
+
+

@@ -95,40 +95,45 @@ disp('start numerical solution process')
 disp('pde solved! Evaluating Results')
 time = sol_u.time;
 
-vtd_w  = vizToolData(3, 2, ...
+vtd_w  = vizToolData(1, {xx, yy}, ...
     @(ax,x,y,z) surfplus(ax,x,y,z,[0,90]),...
     {'x', 'y', 'w'}, ...
     'SliderLabel', 'e-16 s', ...
     'Title', 'Probability density');
-vtd_jx = vizToolData(3, 2, ...
+vtd_jx = vizToolData(1, {xx, yy}, ...
     @(ax,x,y,z) surfplus(ax,x,y,z,[0,90]),...
     {'x', 'y', 'jx'},...
     'Title', 'Current density j_x in x-direction');
-vtd_jy = vizToolData(3, 2, ...
+vtd_jy = vizToolData(1, {xx, yy}, ...
     @(ax,x,y,z) surfplus(ax,x,y,z,[0,90]),...
     {'x', 'y', 'jy'},...
     'Title', 'Current density j_y in y-direction');
 
+prog = 0;
 for idx_t = 1:length(time)
     
-    t = time(idx_t);
-    disp([num2str(t/time(end)) '% '])
-    t = t*6.58212;
-
+    % display progrss
+    prog_new = idx_t/length(time);
+    if prog_new - prog >= 0.1
+        disp([num2str(prog,'%.2f') '% '])
+        prog = prog_new;
+    end
+    
+    t = time(idx_t)*6.58212;
     u = sol_u.solution(:,:,idx_t);
     v = sol_v.solution(:,:,idx_t);
 
     % probability density
     w = abs(u).^2 + abs(v).^2;
-    vtd_w.addData(t, xx, yy, w);
+    vtd_w.addData(t, w);
     
     % current density in x direction
     jx = -2*c*imag(conj(u).*v);
-    vtd_jx.addData(t, xx, yy, jx);
+    vtd_jx.addData(t, jx);
     
     % current density in y direction
     jy = 2*c*real(conj(u).*v);
-    vtd_jy.addData(t, xx, yy, jy);
+    vtd_jy.addData(t, jy);
     
 end
 
@@ -147,7 +152,8 @@ function surfplus(ax,x,y,z,v)
             ylim(ax, ylim(ax))
     end
     zlim(ax, zlim(ax))
-    caxis(ax, zlim(ax))       % fix_colormap    
+    caxis(ax, zlim(ax))       % fix_colormap
+    colormap(ax, 'Default')
 end
 
 
