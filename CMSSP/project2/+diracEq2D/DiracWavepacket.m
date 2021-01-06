@@ -17,8 +17,9 @@ classdef DiracWavepacket < handle
         
         particle = true; % if true, positive energy solutions are used
         
-        k_avg = 0; % average wave number of wave packet
-        E_avg = 0; % average energy of wave packed
+        % properties of the plane wave;
+        k = [];
+        E = [];
         
     end
 
@@ -62,8 +63,8 @@ classdef DiracWavepacket < handle
             this.wavenumbers = ip.Results.k;
             this.amplitudes = ip.Results.a;
             
-            if (sum(this.amplitudes(:).^2)-1) >=1e-15
-            	warning('Wavepacket will not be normalized')
+            if (sum(this.amplitudes(:).^2)-1) >=1e-5
+            	warning('Wavepacket might not be normalized')
             end
             
             % parameters
@@ -99,7 +100,7 @@ classdef DiracWavepacket < handle
                 this.particle = true; % eigenfunction with positive mass behavior
             end
             
-            [this.k_avg, this.E_avg] = this.estimateEnergeticProperties(); 
+            [this.k, this.E] = this.estimateEnergeticProperties(); 
             
         end     
         
@@ -169,8 +170,35 @@ classdef DiracWavepacket < handle
             
             a = this.amplitudes / sqrt(sum(abs(this.amplitudes).^2));
             
-            k = sum(abs(a).^2.*this.wavenumbers,2);
-            E = sum(abs(a).^2.*this.energies);
+            % calculate k data
+            k = struct();
+            
+            k.vec_avg = sum(abs(a).^2.*this.wavenumbers, 2);
+            k.avg = norm(k.vec_avg);
+            
+            k2 =  sum(abs(a).^2.*this.wavenumbers.^2,2);
+            k.vec_disp = sqrt(k2 - k.vec_avg);
+            k.disp = norm(k.vec_disp);
+            
+            norm_k = sqrt(sum(abs(this.wavenumbers).^2,1));
+            [~, idx_max] = max(norm_k);
+            [~, idx_min] = min(norm_k);
+            k.max = norm_k( idx_max);
+            k.min = norm_k( idx_min);
+            idx_max = abs(norm_k - k.max) <= 1e-15 ;
+            idx_min = abs(norm_k - k.min) <= 1e-15 ;
+            k.vec_max = this.wavenumbers(:, idx_max);
+            k.vec_min = this.wavenumbers(:, idx_min);
+            
+            % calculate E data
+            E = struct();
+            
+            E.avg = sum(abs(a).^2.*this.energies);
+            
+            E2 = sum(abs(a).^2.*this.energies.^2);
+            E.disp = sqrt(E2 - E.avg^2);
+            E.min = min(this.energies); 
+            E.max = max(this.energies);
             
         end %estimateEnergeticProperties
         
