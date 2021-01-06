@@ -55,12 +55,12 @@ classdef vizToolData < handle
             this.setUpdateFnc(ip.Results.UpdateFnc)
             
             % plot labels
-            if length(ip.Results.PlotLabels) == this.nd + this.dimd
-                this.plot_lables = ip.Results.PlotLabels;
-            elseif length(ip.Results.PlotLabels) > this.nd + this.dimd
+            if length(ip.Results.PlotLabels) > this.nd + this.dimd
                 error('Too  many labels')
-            else
+            elseif length(ip.Results.PlotLabels) < 1+ this.dimd
                 error('Not enough labels')
+            else
+                this.plot_lables = ip.Results.PlotLabels;
             end          
             this.title = ip.Results.Title;
             this.slider_label = ip.Results.SliderLabel;
@@ -80,8 +80,7 @@ classdef vizToolData < handle
                 end
                 
                 this.slider_data(end+1) = slider_data;
-                
-                if this.dimd == 1
+                if this.dimd <= 1
                     for idx_d = 1:this.nd
                         this.plot_data{idx_d}(1,:,end+1) = varargin{idx_d};
                     end
@@ -131,7 +130,16 @@ classdef vizToolData < handle
         function setUpdateFnc(this, fnc)
             
             if isempty(fnc)
-                if this.dimd == 1
+                if this.dimd == 0
+                    if this.nd == 1
+                        this.update_fnc = @(ax, y) updateFunction0D(ax, 1, y);
+                    elseif this.nd == 2
+                        this.update_fnc = @(ax, y1, y2) updateFunction0D(ax, 2, y1, y2);
+                    elseif this.nd == 3
+                         this.update_fnc = @(ax, y1, y2, y3) updateFunction0D(ax, 3, y1, y2, y3);
+                    end  
+                    
+                elseif this.dimd == 1
                     if this.nd == 1
                         this.update_fnc = @(ax, x, y) updateFunction1D(ax, 1, x, y);
                     elseif this.nd == 2
@@ -151,10 +159,11 @@ classdef vizToolData < handle
                     
                 end
                 
-            elseif this.validifyFnc(fnc)
-                this.plot_fnc = fnc;
+            %elseif ~this.validifyFnc(fnc)
+            %    error("Input 'UpdateFunction' is not vallid")
+            %    ToDo: make better
             else
-                error("Input 'UpdateFunction' is not vallid")
+                this.update_fnc = fnc;
             end
             
         end %setUpdateFnc
@@ -250,7 +259,15 @@ classdef vizToolData < handle
         function exeForDim(this, fnc, ax, data)
             
            n_data = length(data); 
-           if this.dimd == 1
+           if this.dimd == 0
+                if n_data == 1
+                    fnc(ax, data{1});
+                elseif n_data == 2
+                    fnc(ax, data{1}, data{2});
+                elseif n_data == 3
+                    fnc(ax, data{1}, data{2}, data{3});
+                end  
+           elseif this.dimd == 1
                 if n_data == 1
                     fnc(ax, this.domain_data{1}, data{1});
                 elseif n_data == 2
@@ -274,20 +291,23 @@ classdef vizToolData < handle
             fig = figure();
             ax_ = axes(fig);
             
-            test_data = {};
-            for idx_d = 1:this.nd
-                test_data{idx_d} = zeros(size(this.domain_data{1}));
-            end
-            
-            try
-                this.exeForDim(fnc, ax_, test_data)
+            if this.dimd > 0
+                test_data = {};
+                for idx_d = 1:this.nd
+                    test_data{idx_d} = zeros(size(this.domain_data{1}));
+                end
+                try
+                    this.exeForDim(fnc, ax_, test_data)
+                    test = true;
+                catch err
+                    disp('The following went wrong while testing plot_fnc:')
+                    disp(err.message)
+                    test = false;
+                end
+            else
+                %ToDO: No test for this.dimd = 0 implemented jet
                 test = true;
-            catch err
-                disp('The following went wrong while testing plot_fnc:')
-                disp(err.message)
-                test = false;
             end
-            
             close(fig)
             
         end
@@ -297,6 +317,14 @@ classdef vizToolData < handle
 end
 
 %%% subroutines %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function updateFunction0D(ax, n_obj, varargin)
+
+    graphic_obj = ax.Children();
+    for idx_obj = 1:n_obj
+        set(graphic_obj(idx_obj), 'YData', varargin{idx_obj});
+    end
+end
+
 function updateFunction1D(ax, n_obj, varargin)
 
     graphic_obj = ax.Children();

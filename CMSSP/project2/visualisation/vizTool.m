@@ -142,9 +142,6 @@ file_name = [answer{1}];
 movie = VideoWriter(file_name, 'MPEG-4');
 
 % choose frame 
-
-
-
 prompt_string = {'Choose a frame for the video'};
 list_string = {'Figure', 'Axes1', 'Axes2', 'Axes3'};
 indx = listdlg('PromptString',prompt_string,...
@@ -178,6 +175,7 @@ open(movie)
 for idx_s = slide_idx
     
     updatePlot(handles, idx_s)   
+    updateSlider(handles, idx_s)
     
     frame = getframe(frame_obj);
     writeVideo(movie,frame)
