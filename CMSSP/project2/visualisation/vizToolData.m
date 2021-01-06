@@ -245,8 +245,13 @@ classdef vizToolData < handle
         
         function plotLabels(this, ax)
             
-            xlabel(ax, this.plot_lables{1})
-            ylabel(ax, this.plot_lables{2})           
+            if this.dimd >=1
+                xlabel(ax, this.plot_lables{1})
+                ylabel(ax, this.plot_lables{2})  
+            else
+                ylabel(ax, this.plot_lables{1})
+            end
+                     
             if this.dimd >= 2
                 zlabel(ax, this.plot_lables{3})   
             end
