@@ -35,7 +35,7 @@ x0 = -2; % [distance]
 y0 = -1.5; % [distance]
 params = setupDiscretisation(1, 3, 3); %default values: (T, Lx, Ly)
 
-time = linspace(0, params.T, params.nt+1); %[time]
+ctime = linspace(0, params.cT, params.nt+1); %[time]
 
 x = linspace(x0, x0 + params.Lx, 2*params.nx+1);
 x = x(1:end-1);
@@ -47,17 +47,15 @@ y = y(1:end-1);
 
 %% medium, mass, potetial %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 c = 1e-4;       % average speed of particel [velocity]                
-mass1 = 0;      % massterm      [energy]
-mass2 = 0.02;  % massterm      [energy]
+m1 = 0;      % massterm      [energy]
+m2 = 0.02;  % massterm      [energy]
 pot = 0;        % potetial      [energy] [ev]
 
 potential = pot*ones(size(xx));
-massfield = mass1*ones(size(xx));
-massfield(xx>0) = mass2;
+mass = m1*ones(size(xx));
+mass(xx>0) = m2;
 
-M_plus  = (potential + massfield)/(1i*c);  
-M_minus = (potential - massfield)/(1i*c); 
-
+time = ctime./c;
 %% initial conditions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('constructing inital condition')
 
@@ -72,7 +70,7 @@ gwp = diracEq2D.constructGaussianPol(...
     'x0', -0.3, ...
     'y0', 0, ...
     'potential', pot, ...
-    'mass', mass1, ...
+    'mass', m1, ...
     'c', c, ...
     'solution', 1, ...
     'volumen', params.Lx*params.Ly);
@@ -88,8 +86,9 @@ disp('start numerical solution process')
     xx, ...
     yy, ...
     time, ...
-    'M_plus', M_plus,...
-    'M_minus', M_minus);
+    'c', c,...
+    'mass', mass ,...
+    'potential', potential);
 
 disp('Pde solved!')
 

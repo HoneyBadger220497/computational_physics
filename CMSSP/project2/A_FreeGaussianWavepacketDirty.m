@@ -30,7 +30,7 @@ addpath([pwd '\visualisation'])
 
 %% setup computational domain %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 params = setupDiscretisation(1,3,3);
-time = linspace(0, params.T, params.nt+1); %[time]
+ctime = linspace(0, params.cT, params.nt+1); %[time]
 
 x0 = -2; % [distance] 
 x = linspace(x0, x0 + params.Lx, 2*params.nx+1);
@@ -44,12 +44,13 @@ y = y(1:end-1);
 
 %% medium, mass, potetial %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 c = 1;           % average speed of particel [velocity]                
-mass = 2;        % massterm      [energy]
+m = 2;        % massterm      [energy]
 pot = 0;   % potetial      [energy] 
 
-M_plus  = (pot + mass)/(1i*c)*ones(size(xx));  
-M_minus = (pot - mass)/(1i*c)*ones(size(xx)); 
+mass  = m*ones(size(xx));  
+potential = pot*ones(size(xx)); 
 
+time = ctime./c;
 %% initial conditions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('constructing inital condition')
 
@@ -63,14 +64,10 @@ disp('constructing inital condition')
     'x0',  -0.5, ...
     'y0',  -0.5, ...
     'potential', pot, ...
-    'mass', mass, ...
+    'mass', m, ...
     'c', c, ...
     'solution', 1, ...
     'normalize', true);
-
-% plot inital condition
-w_init = abs(u_init).^2 + abs(v_init).^2;
-surfplus(axes(figure(1)),xx,yy, w_init , [0,90]);
 
 %% solve pde %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('start numerical solution process')
@@ -81,8 +78,9 @@ disp('start numerical solution process')
     xx, ...
     yy, ...
     time, ...
-    'M_plus', M_plus,...
-    'M_minus', M_minus);
+    'c', c,...
+    'mass', mass ,...
+    'potential', potential);
 
 disp('pde solved!')
 

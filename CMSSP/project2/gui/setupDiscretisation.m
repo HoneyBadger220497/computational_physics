@@ -63,11 +63,11 @@ ip.addOptional('Lx',2)
 ip.addOptional('Ly',2)
 ip.parse(varargin{:})
 
-handles.params.T = ip.Results.T;
+handles.params.cT = ip.Results.T;
 handles.params.Lx = ip.Results.Lx;
 handles.params.Ly = ip.Results.Ly;
 
-set(handles.edit_T, 'String' ,num2str(handles.params.T));
+set(handles.edit_T, 'String' ,num2str(handles.params.cT));
 set(handles.edit_Lx, 'String' ,num2str(handles.params.Lx));
 set(handles.edit_Ly, 'String' ,num2str(handles.params.Ly));
 
@@ -126,7 +126,7 @@ function edit_T_Callback(hObject, eventdata, handles)
 % Hints: get(hObject,'String') returns contents of edit_T as text
 %        str2double(get(hObject,'String')) returns contents of edit_T as a double
 T = get(handles.edit_T, 'String');
-handles.params.T = str2double(T);
+handles.params.cT = str2double(T);
 
 handles.vis = calcParams(handles);
 updateDisplay(handles, handles.vis)
@@ -329,7 +329,7 @@ vis = handles.vis;
 vis.rx = handles.params.dt / handles.params.dx;
 vis.ry = handles.params.dt / handles.params.dy;
 
-vis.nt = handles.params.T / handles.params.dt;
+vis.nt = handles.params.cT / handles.params.dt;
 vis.nx = handles.params.Lx / handles.params.dx;
 vis.ny = handles.params.Ly / handles.params.dy;
 
