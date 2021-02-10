@@ -65,6 +65,7 @@ ip.addParameter('bc', 't', @(x) ischar(x) && any(strcmp(x, {'0','t'})));
 ip.addParameter('mass', 0);
 ip.addParameter('potential', 0);
 ip.addParameter('c', 1);
+ip.addParameter('N', 200);
 ip.parse(varargin{:})
 
 xx = ip.Results.xx;
@@ -89,6 +90,7 @@ end
 
 c = ip.Results.c;
 
+N_sol = ip.Results.N;
 %%% init required parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 dx = 2*(xx(1,2) - xx(1,1));
 dy = 2*(yy(2,1) - yy(1,1));
@@ -127,8 +129,10 @@ for idx_t = 1:length(time)
     
     %%% store solution of v
     t = time(idx_t); % idx_t == 1 --> t == 0;
-    [~, sol_vp_n] = vp_n.xInterp();
-    sol_v.appendSolution(t, sol_vp_n);
+    if idx_t ==1 || idx_t ==length(time) || mod(idx_t, floor(length(time)/N_sol)) == 0
+        [~, sol_vp_n] = vp_n.xInterp();
+        sol_v.appendSolution(t, sol_vp_n);
+    end
     
     %%% um_n + vp_n -> um_np1
     % u is stored as x_flieds -> get x neighbours
@@ -153,10 +157,12 @@ for idx_t = 1:length(time)
         );
     
     %%% store solution of u
-    t = time(idx_t); % idx_t == 1 --> t == 0;
-    [~, sol_um_n]   = um_n.oInterp();
-    [~, sol_um_np1] = um_np1.oInterp();
-    sol_u.appendSolution(t, 0.5*(sol_um_n + sol_um_np1)); % time interpolation
+    t = time(idx_t); % idx_t == 1 --> t == 0
+    if idx_t ==1 || idx_t ==length(time) || mod(idx_t, floor(length(time)/N_sol)) == 0
+        [~, sol_um_n]   = um_n.oInterp();
+        [~, sol_um_np1] = um_np1.oInterp();
+        sol_u.appendSolution(t, 0.5*(sol_um_n + sol_um_np1)); % time interpolation
+    end
     
     %%% update um_n
     um_n.setXField(um_np1.getXField()); % the mass terms do not change over time
