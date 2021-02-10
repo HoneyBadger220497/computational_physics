@@ -31,9 +31,9 @@ addpath([pwd '\gui'])
 addpath([pwd '\visualisation'])
 
 %% setup computational domain %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-x0 = -2; % [distance]
-y0 = -1.5; % [distance]
-params = setupDiscretisation(1, 3, 3); %default values: (T, Lx, Ly)
+x0 = -1; % [distance]
+y0 =  -0.5; % [distance]
+params = setupDiscretisation(1, 2, 1); %default values: (T, Lx, Ly)
 
 ctime = linspace(0, params.cT, params.nt+1); %[time]
 
@@ -49,7 +49,7 @@ y = y(1:end-1);
 c = 1e-4;  % average speed of particel [velocity]                
 m = 0;  % massterm      [energy]
 pot1 = 0;  % potetial      [energy] [ev]
-pot2 = 0.02; % potetial      [energy] [ev]
+pot2 = 0.009; % potetial      [energy] [ev]
 
 potential = pot1*ones(size(xx));
 potential(xx > 0) = pot2; 
@@ -61,14 +61,14 @@ disp('constructing inital condition')
 
 gwp = diracEq2D.constructGaussianPol(...
     100, ...   %kx0
-    50, ...    %ky0
+    0, ...    %ky0
     0.05 , ... %b
     30*pi, ...
     1*pi/(params.Lx), ...
     1*pi/(params.Ly), ...
     't0',  0, ...
     'x0', -0.3, ...
-    'y0', -0.5, ...
+    'y0', 0, ...
     'potential', pot1, ...
     'mass', m, ...
     'c', c, ...

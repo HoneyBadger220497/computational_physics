@@ -33,21 +33,21 @@ addpath([pwd '\gui'])
 addpath([pwd '\visualisation'])
 
 %% setup computational domain %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-params = setupDiscretisation(1,2,2);
+params = setupDiscretisation(1,2,1);
 ctime = linspace(0, params.cT, params.nt+1); %[time]
 
 x0 = -1; % [distance] 
 x = linspace(x0, x0 + params.Lx, 2*params.nx+1);
 x = x(1:end-1);
 
-y0 = -1; % [distance]
+y0 = -0.5; % [distance]
 y = linspace(y0, y0 + params.Ly, 2*params.ny+1);
 y = y(1:end-1);
 
 [xx, yy] = meshgrid(x,y);
 
 %% setup picture frame for domain of intereset
-sigma_0 = 0;%1000;
+sigma_0 = 100;
 
 sigma = zeros(size(xx));
 
@@ -59,7 +59,7 @@ idx_l = xx < -x_pml;
 sigma(idx_l) = sigma_0 .* (xx(idx_l)+x_pml).^2;
 
 %% medium, mass, potetial %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-c = 1e-4;   % average speed of particel [velocity]                
+c = 1e-3;   % average speed of particel [velocity]                
 m = 0;       % massterm      [energy]
 pot = 0;     % potetial      [energy] 
 
@@ -70,20 +70,22 @@ time = ctime./c;
 %% initial conditions %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('constructing inital condition')
 
-[u_init, v_init] = diracEq2D.constructGaussianDirty(...
-    xx, ... %xx
-    yy, ... %yy
-    100, ...%kx0
-    0, ...%ky0
-    0.2 , ... %bx
-    0.2 , ... %by
+gwp = diracEq2D.constructGaussianPol(...
+    50, ...     %kx0
+    0, ...     %ky0
+    0.08 , ... %b
+    30*pi, ...
+    1*pi/(params.Lx), ...
+    1*pi/(params.Ly), ...
+    't0',  0, ...
     'x0',  0, ...
     'y0',  0, ...
     'potential', pot, ...
     'mass', m, ...
     'c', c, ...
     'solution', 1, ...
-    'normalize', true);
+    'volumen', params.Lx*params.Ly);
+[u_init, v_init] = gwp.getComponent(xx, yy, 0);
 
 %% solve pde %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 disp('start numerical solution process')

@@ -5,6 +5,7 @@
 % certain momentum
 % The fermion is represented by a gaussian wavepacket, which is formed by a
 % superposition of analytical plane wave solutions.
+% The k-vectors used are within a SPHERE around the mean kvector
 %
 % NATURAL UNITS:
 % units where: 
@@ -29,23 +30,23 @@ addpath([pwd '\gui'])
 addpath([pwd '\visualisation'])
 
 %% setup computational domain %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-params = setupDiscretisation(1,3,3);
+params = setupDiscretisation(1,1,1);
 ctime = linspace(0, params.cT, params.nt+1); %[time]
 
-x0 = -2; % [distance] 
+x0 = -0.5; % [distance] 
 x = linspace(x0, x0 + params.Lx, 2*params.nx+1);
 x = x(1:end-1);
 
-y0 = -2; % [distance]
+y0 = -0.5; % [distance]
 y = linspace(y0, y0 + params.Ly, 2*params.ny+1);
 y = y(1:end-1);
 
 [xx, yy] = meshgrid(x,y);
 
 %% medium, mass, potetial %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-c = 1;           % average speed of particel [velocity]                
-m = 2;        % massterm      [energy]
-pot = 0;         % potetial      [energy] 
+c = 1e-4;        % average speed of particel [velocity]                
+m = 0.01;     % massterm      [energy]
+pot = 0;         % potential     [energy] 
 
 mass = m*ones(size(xx));  
 potential = pot*ones(size(xx)); 
@@ -55,19 +56,19 @@ time = ctime./c;
 disp('constructing inital condition')
 
 gwp = diracEq2D.constructGaussianPol(...
-    3, ...     %kx0
-    3, ...     %ky0
+    30, ...     %kx0
+    30, ...     %ky0
     0.05 , ... %b
     30*pi, ...
     1*pi/(params.Lx), ...
     1*pi/(params.Ly), ...
     't0',  0, ...
-    'x0',  -0.5, ...
-    'y0',  -0.5, ...
+    'x0',  0, ...
+    'y0',  0, ...
     'potential', pot, ...
     'mass', m, ...
     'c', c, ...
-    'solution', 1, ...
+    'solution', -1, ...
     'volumen', params.Lx*params.Ly);
 
 [u_init, v_init] = gwp.getComponent(xx, yy, 0);
