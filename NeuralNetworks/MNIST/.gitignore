@@ -1,0 +1,9 @@
+*.log
+*.mat
+*.txt
+**~$
+*.xlsx
+*.png
+*.jpg
+*.idx3-ubyte
+*.idx1-ubyte
