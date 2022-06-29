@@ -1,8 +1,2 @@
-# ComputationalPhysicsProjects
-
-## Overview over directories
-
-### CMSSP - Computaional Methods in Solid State Physics
-### MCM - Monte Carlo Methods
-### NMP - Numerical Methods in Physics
-### NM - Numerische Mathemathik
+A collection of programms i wrote during my master course "Computational methods in solid state physics".
+They are mainly concerned with solutions of transport-, diffusion- and Dirac-equations with various boundary conditions.
